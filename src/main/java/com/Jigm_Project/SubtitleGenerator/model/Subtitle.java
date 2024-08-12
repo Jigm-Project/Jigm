@@ -1,13 +1,14 @@
 package com.Jigm_Project.SubtitleGenerator.model;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Data; // Lombok의 어노테이션
 
 @Entity
+@Table(name = "subtitles") // 테이블 이름을 명시적으로 설정
 @Data
 public class Subtitle {
 
