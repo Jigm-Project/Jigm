@@ -12,7 +12,7 @@
         <relativePath/> <!-- 리포지토리에서 부모 POM을 검색 -->
     </parent>
 
-    <groupId>com.jigm_security</groupId>
+    <groupId>com.jigm</groupId>
     <artifactId>project</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>war</packaging> <!-- 프로젝트를 배포할 때 WAR 파일로 패키징 -->
