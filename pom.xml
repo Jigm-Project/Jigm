@@ -1,101 +1,141 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Spring Boot의 부모 POM을 지정하여 버전 관리를 간편하게 함 -->
+    <!-- Spring Boot의 기본 부모 설정 -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.3.2</version>
-        <relativePath/> <!-- 리포지토리에서 부모 POM을 검색 -->
+        <relativePath/>
     </parent>
 
+    <!-- 프로젝트의 기본 정보 설정 -->
     <groupId>com.jigm</groupId>
-    <artifactId>project</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <packaging>war</packaging> <!-- 프로젝트를 배포할 때 WAR 파일로 패키징 -->
+    <artifactId>clova-speech</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>war</packaging>
     <name>project</name>
-    <description>Spring Boot를 사용한 데모 프로젝트</description>
+    <description>Spring Boot를 사용한 네이버 클로바 Speech 프로젝트</description>
 
     <properties>
-        <!-- 사용하고 있는 자바의 버전을 설정 -->
+        <!-- Java 버전 및 인코딩 설정 -->
         <java.version>17</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
     <dependencies>
-        <!-- Spring Boot Starter Web: 웹 애플리케이션 개발에 필요한 기본 구성 요소를 제공 -->
+        <!-- Spring Boot Starter Web: 웹 애플리케이션 개발에 필요한 기본 의존성 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Spring Boot Starter Data JPA: JPA를 사용하여 데이터베이스에 접근하기 위한 의존성 -->
+        <!-- Spring Boot Starter Data JPA: JPA 사용을 위한 의존성 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- Spring Boot Starter Actuator: 애플리케이션의 상태를 모니터링하고 관리할 수 있는 기능을 제공 -->
+        <!-- Spring Boot Starter Actuator: 애플리케이션 모니터링 및 관리 도구 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- Spring Boot DevTools: 개발 중에 자동 재시작 및 기타 개발 편의 기능 제공 (런타임에만 적용) -->
+        <!-- H2 Database (For Testing): 테스트를 위한 H2 데이터베이스 -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
             <scope>runtime</scope>
-            <optional>true</optional>
         </dependency>
 
-        <!-- Lombok: 반복적인 코드를 줄이기 위한 애너테이션 기반 라이브러리 (빌드 시 제공) -->
+        <!-- 네이버 클로바 스피치 관련 의존성 -->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.13</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+            <version>4.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.8.9</version>
+        </dependency>
+
+        <!-- Lombok 의존성 -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.30</version>
-            <scope>provided</scope> <!-- 빌드 시에만 필요, 런타임에는 필요 없음 -->
+            <scope>provided</scope>
         </dependency>
 
-        <!-- MySQL Connector: MySQL 데이터베이스와의 연결을 위한 드라이버 -->
+        <!-- Hibernate Core -->
         <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <version>8.0.33</version>
-            <scope>runtime</scope>
-        </dependency>
-
-        <!-- Spring Boot Starter Test: 테스트에 필요한 기본 구성 요소 제공 -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- JPA API 추가 (Jakarta): JPA 기능을 사용하기 위한 Jakarta Persistence API -->
-        <dependency>
-            <groupId>jakarta.persistence</groupId> <!-- Jakarta로 변경 -->
-            <artifactId>jakarta.persistence-api</artifactId>
-            <version>3.1.0</version> <!-- Jakarta EE에 맞는 버전 -->
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>6.5.2.Final</version>
         </dependency>
     </dependencies>
 
     <build>
-    <plugins>
-        <plugin>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-maven-plugin</artifactId>
-            <version>3.3.2</version>
-            <executions>
-                <execution>
-                    <goals>
-                        <goal>repackage</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>
-    </plugins>
-</build>
+        <extensions>
+            <!-- OS에 따라 Maven 플러그인 실행을 다르게 설정 -->
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>1.6.1</version>
+            </extension>
+        </extensions>
+        <plugins>
+            <!-- Maven Compiler Plugin: Java 소스 코드를 컴파일하기 위한 플러그인 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>testCompile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <showDeprecation>true</showDeprecation>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+            
+            <!-- Spring Boot Maven Plugin 추가 -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.3.2</version>
+                <configuration>
+                    <mainClass>com.jigmproject.clovaspeech.MainApplication</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

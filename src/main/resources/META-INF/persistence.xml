@@ -6,19 +6,16 @@
              version="3.0">
 
     <persistence-unit name="subtitleGeneratorPU">
-        <!-- 데이터베이스 연결 정보 -->
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         
-        <class>com.Jigm_Project.SubtitleGenerator.model.Subtitle</class>
+        <class>com.jigmproject.subtitlegenerator.model.Subtitle</class>
 
         <properties>
-            <!-- 데이터베이스 URL, 사용자명, 비밀번호 등 -->
-            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/subtitles_db"/>
-            <property name="jakarta.persistence.jdbc.user" value="Jay"/>
-            <property name="jakarta.persistence.jdbc.password" value="4#YdJZ9M%e"/>
+            <property name="jakarta.persistence.jdbc.url" value="${DB_URL}"/>
+            <property name="jakarta.persistence.jdbc.user" value="${DB_USER}"/>
+            <property name="jakarta.persistence.jdbc.password" value="${DB_PASSWORD}"/>
             <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
             
-            <!-- Hibernate 설정 -->
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect"/>
             <property name="hibernate.hbm2ddl.auto" value="update"/>
             <property name="hibernate.show_sql" value="true"/>
