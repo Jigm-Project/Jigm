@@ -1,60 +1,70 @@
 package com.jigmproject.subtitlegenerator.service;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.jigmproject.clovaspeech.ClovaSpeechClient;
-import com.jigmproject.subtitlegenerator.entity.Subtitle;
-import com.jigmproject.subtitlegenerator.exception.ResourceNotFoundException;
-import com.jigmproject.subtitlegenerator.repository.SubtitleRepository;
+import com.jigmproject.subtitlegenerator.entity.SubtitleEntity;
 
-@Service  // 이 클래스가 서비스 레이어 역할을 한다고 스프링에 알림
+@Service
 public class SubtitleService {
 
-    private final ClovaSpeechClient clovaSpeechClient;
-    private final SubtitleRepository subtitleRepository;
+    @Value("${clova.secret.key}")
+    private String clovaSecretKey;
 
-    @Autowired  // 생성자에 의존성 주입
-    public SubtitleService(ClovaSpeechClient clovaSpeechClient, SubtitleRepository subtitleRepository) {
-        this.clovaSpeechClient = clovaSpeechClient;
-        this.subtitleRepository = subtitleRepository;
-    }
+    @Value("${clova.invoke.url}")
+    private String clovaInvokeUrl;
 
-    // URL을 통해 자막 생성
-    public Subtitle generateSubtitleFromUrl(String videoUrl) {
-        String subtitleText = clovaSpeechClient.url(videoUrl, new ClovaSpeechClient.NestRequestEntity());
-        Subtitle subtitle = Subtitle.builder()
-                                    .text(subtitleText)
-                                    .source(videoUrl)
-                                    .build();
-        return subtitleRepository.save(subtitle);  // 생성된 자막을 데이터베이스에 저장
+    // ClovaSpeechClient 생성 및 설정 로직을 하나의 메서드로 통합
+    private ClovaSpeechClient createClovaSpeechClient() {
+        return new ClovaSpeechClient(clovaSecretKey, clovaInvokeUrl);
     }
 
     // 파일을 통해 자막 생성
-    public Subtitle generateSubtitleFromFile(File file) {
-        String subtitleText = clovaSpeechClient.upload(file, new ClovaSpeechClient.NestRequestEntity());
-        Subtitle subtitle = Subtitle.builder()
-                                    .text(subtitleText)
-                                    .source(file.getName())
-                                    .build();
-        return subtitleRepository.save(subtitle);  // 생성된 자막을 데이터베이스에 저장
+    public SubtitleEntity generateSubtitleFromFile(MultipartFile file) throws IOException {
+        // 임시 파일로 저장
+        Path tempFilePath = Files.createTempFile("upload-", ".mp4");
+        file.transferTo(tempFilePath.toFile());
+
+        // ClovaSpeechClient 사용하여 음성 인식 요청
+        ClovaSpeechClient clovaSpeechClient = createClovaSpeechClient();
+        ClovaSpeechClient.NestRequestEntity nestRequestEntity = new ClovaSpeechClient.NestRequestEntity();
+        nestRequestEntity.setLanguage("ko-KR");
+        nestRequestEntity.setCompletion("sync");
+
+        // 음성 인식 요청 및 응답 처리
+        String responseJson = clovaSpeechClient.upload(tempFilePath.toFile(), nestRequestEntity);
+
+        // JSON 응답 파싱 및 자막 생성
+        SubtitleEntity subtitle = new SubtitleEntity();
+        subtitle.setText(responseJson); // 실제로는 JSON을 파싱하여 자막 텍스트를 설정합니다.
+
+        // 임시 파일 삭제
+        Files.deleteIfExists(tempFilePath);
+
+        return subtitle;
     }
 
-    // 오브젝트 스토리지 키를 통해 자막 생성
-    public Subtitle generateSubtitleFromObjectStorage(String dataKey) {
-        String subtitleText = clovaSpeechClient.objectStorage(dataKey, new ClovaSpeechClient.NestRequestEntity());
-        Subtitle subtitle = Subtitle.builder()
-                                    .text(subtitleText)
-                                    .source(dataKey)
-                                    .build();
-        return subtitleRepository.save(subtitle);  // 생성된 자막을 데이터베이스에 저장
-    }
+    // URL을 통해 자막 생성
+    public SubtitleEntity generateSubtitleFromUrl(String videoUrl) {
+        // ClovaSpeechClient 사용하여 URL에서 자막 생성
+        ClovaSpeechClient clovaSpeechClient = createClovaSpeechClient();
+        ClovaSpeechClient.NestRequestEntity nestRequestEntity = new ClovaSpeechClient.NestRequestEntity();
+        nestRequestEntity.setLanguage("ko-KR");
+        nestRequestEntity.setCompletion("sync");
 
-    // ID를 통해 자막 조회
-    public Subtitle getSubtitleById(Long id) {
-        return subtitleRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Subtitle not found with id " + id));  // 자막이 없으면 예외 발생
+        // URL을 사용하여 음성 인식 요청
+        String responseJson = clovaSpeechClient.url(videoUrl, nestRequestEntity);
+
+        // JSON 응답 파싱 및 자막 생성
+        SubtitleEntity subtitle = new SubtitleEntity();
+        subtitle.setText(responseJson); // 실제로는 JSON을 파싱하여 자막 텍스트를 설정합니다.
+
+        return subtitle;
     }
 }

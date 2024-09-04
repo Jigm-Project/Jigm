@@ -3,7 +3,6 @@ package com.jigmproject.clovaspeech;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.http.Header;
@@ -17,112 +16,37 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import com.google.gson.Gson;
 
-import jakarta.annotation.PostConstruct;
-
-@Component
 public class ClovaSpeechClient {
 
     private final String secret;
     private final String invokeUrl;
-
-    public ClovaSpeechClient(@Value("${clova.speech.api.key}") String secret,
-                             @Value("${clova.speech.api.url}") String invokeUrl) {
-        this.secret = secret;
-        this.invokeUrl = invokeUrl;
-    }
-
     private final CloseableHttpClient httpClient = HttpClients.createDefault();
     private final Gson gson = new Gson();
 
     private Header[] headers;
 
-    @PostConstruct
-    public void init() {
+    public ClovaSpeechClient(String secret, String invokeUrl) {
+        this.secret = secret;
+        this.invokeUrl = invokeUrl;
         this.headers = new Header[] {
             new BasicHeader("Accept", "application/json"),
-            new BasicHeader("X-CLOVASPEECH-API-KEY", secret),
+            new BasicHeader("X-CLOVASPEECH-API-KEY", this.secret),
         };
-    }
-
-    public static class Boosting {
-        private String words;
-
-        public String getWords() {
-            return words;
-        }
-
-        public void setWords(String words) {
-            this.words = words;
-        }
-    }
-
-    public static class Diarization {
-        private Boolean enable = Boolean.FALSE;
-        private Integer speakerCountMin;
-        private Integer speakerCountMax;
-
-        public Boolean getEnable() {
-            return enable;
-        }
-
-        public void setEnable(Boolean enable) {
-            this.enable = enable;
-        }
-
-        public Integer getSpeakerCountMin() {
-            return speakerCountMin;
-        }
-
-        public void setSpeakerCountMin(Integer speakerCountMin) {
-            this.speakerCountMin = speakerCountMin;
-        }
-
-        public Integer getSpeakerCountMax() {
-            return speakerCountMax;
-        }
-
-        public void setSpeakerCountMax(Integer speakerCountMax) {
-            this.speakerCountMax = speakerCountMax;
-        }
-    }
-
-    public static class Sed {
-        private Boolean enable = Boolean.FALSE;
-
-        public Boolean getEnable() {
-            return enable;
-        }
-
-        public void setEnable(Boolean enable) {
-            this.enable = enable;
-        }
     }
 
     public static class NestRequestEntity {
         private String language = "ko-KR";
         private String completion = "sync";
-        private String callback;
-        private Map<String, Object> userdata;
-        private Boolean wordAlignment = Boolean.TRUE;
-        private Boolean fullText = Boolean.TRUE;
-        private List<Boosting> boostings;
-        private String forbiddens;
-        private Diarization diarization;
-        private Sed sed;
+        private Boolean wordAlignment = true;
+        private Boolean fullText = true;
+        private Boolean noiseFiltering = true;
+        private Boolean resultToObs = false;
+        private Diarization diarization = new Diarization();
 
-        public Sed getSed() {
-            return sed;
-        }
-
-        public void setSed(Sed sed) {
-            this.sed = sed;
-        }
-
+        // getter, setter
         public String getLanguage() {
             return language;
         }
@@ -137,10 +61,6 @@ public class ClovaSpeechClient {
 
         public void setCompletion(String completion) {
             this.completion = completion;
-        }
-
-        public String getCallback() {
-            return callback;
         }
 
         public Boolean getWordAlignment() {
@@ -159,32 +79,20 @@ public class ClovaSpeechClient {
             this.fullText = fullText;
         }
 
-        public void setCallback(String callback) {
-            this.callback = callback;
+        public Boolean getNoiseFiltering() {
+            return noiseFiltering;
         }
 
-        public Map<String, Object> getUserdata() {
-            return userdata;
+        public void setNoiseFiltering(Boolean noiseFiltering) {
+            this.noiseFiltering = noiseFiltering;
         }
 
-        public void setUserdata(Map<String, Object> userdata) {
-            this.userdata = userdata;
+        public Boolean getResultToObs() {
+            return resultToObs;
         }
 
-        public String getForbiddens() {
-            return forbiddens;
-        }
-
-        public void setForbiddens(String forbiddens) {
-            this.forbiddens = forbiddens;
-        }
-
-        public List<Boosting> getBoostings() {
-            return boostings;
-        }
-
-        public void setBoostings(List<Boosting> boostings) {
-            this.boostings = boostings;
+        public void setResultToObs(Boolean resultToObs) {
+            this.resultToObs = resultToObs;
         }
 
         public Diarization getDiarization() {
@@ -193,6 +101,19 @@ public class ClovaSpeechClient {
 
         public void setDiarization(Diarization diarization) {
             this.diarization = diarization;
+        }
+    }
+
+    // 화자 구분을 위한 클래스 (필요에 따라 설정 가능)
+    public static class Diarization {
+        private Boolean enable = true;
+
+        public Boolean getEnable() {
+            return enable;
+        }
+
+        public void setEnable(Boolean enable) {
+            this.enable = enable;
         }
     }
 
@@ -209,68 +130,19 @@ public class ClovaSpeechClient {
         body.put("url", url);
         body.put("language", nestRequestEntity.getLanguage());
         body.put("completion", nestRequestEntity.getCompletion());
-        body.put("callback", nestRequestEntity.getCallback());
-        body.put("userdata", nestRequestEntity.getUserdata());
         body.put("wordAlignment", nestRequestEntity.getWordAlignment());
         body.put("fullText", nestRequestEntity.getFullText());
-        body.put("forbiddens", nestRequestEntity.getForbiddens());
-        body.put("boostings", nestRequestEntity.getBoostings());
+        body.put("noiseFiltering", nestRequestEntity.getNoiseFiltering());
+        body.put("resultToObs", nestRequestEntity.getResultToObs());
         body.put("diarization", nestRequestEntity.getDiarization());
-        //body.put("sed", nestRequestEntity.getSed()); 총성, 박수 소리 등 특정 소리를 감지하도록 설정
-// 여기서 디버깅 
 
         HttpEntity httpEntity = new StringEntity(gson.toJson(body), ContentType.APPLICATION_JSON);
         httpPost.setEntity(httpEntity);
         return execute(httpPost);
     }
 
-    /**
-     * recognize media using Object Storage
-     * @param dataKey required, the Object Storage key
-     * @param nestRequestEntity optional
-     * @return string
-     */
-    public String objectStorage(String dataKey, NestRequestEntity nestRequestEntity) {
-        HttpPost httpPost = new HttpPost(invokeUrl + "/recognizer/object-storage");
-        httpPost.setHeaders(headers);
-        Map<String, Object> body = new HashMap<>();
-        body.put("dataKey", dataKey);
-        body.put("language", nestRequestEntity.getLanguage());
-        body.put("completion", nestRequestEntity.getCompletion());
-        body.put("callback", nestRequestEntity.getCallback());
-        body.put("userdata", nestRequestEntity.getUserdata());
-        body.put("wordAlignment", nestRequestEntity.getWordAlignment());
-        body.put("fullText", nestRequestEntity.getFullText());
-        body.put("forbiddens", nestRequestEntity.getForbiddens());
-        body.put("boostings", nestRequestEntity.getBoostings());
-        body.put("diarization", nestRequestEntity.getDiarization());
-        //body.put("sed", nestRequestEntity.getSed());
-        StringEntity httpEntity = new StringEntity(gson.toJson(body), ContentType.APPLICATION_JSON);
-        httpPost.setEntity(httpEntity);
-        return execute(httpPost);
-    }
-
-    /**
-     *
-     * recognize media using a file
-     * @param file required, the media file
-     * @param nestRequestEntity optional
-     * @return string
-     */
+    // 파일을 업로드하여 자막을 생성하는 메서드
     public String upload(File file, NestRequestEntity nestRequestEntity) {
-        // 파일이 존재하는지 확인
-        if (!file.exists()) {
-            System.out.println("파일이 존재하지 않습니다: " + file.getAbsolutePath());
-            throw new RuntimeException("파일이 존재하지 않습니다: " + file.getAbsolutePath());
-        }
-    
-        // 파일 포맷 확인 (예: mp4, mp3 등)
-        String fileName = file.getName();
-        if (!(fileName.endsWith(".mp4") || fileName.endsWith(".mp3") || fileName.endsWith(".wav"))) {
-            System.out.println("지원되지 않는 파일 포맷입니다: " + fileName);
-            throw new RuntimeException("지원되지 않는 파일 포맷입니다: " + fileName);
-        }
-    
         HttpPost httpPost = new HttpPost(invokeUrl + "/recognizer/upload");
         httpPost.setHeaders(headers);
         HttpEntity httpEntity = MultipartEntityBuilder.create()
@@ -284,12 +156,7 @@ public class ClovaSpeechClient {
     private String execute(HttpPost httpPost) {
         try (final CloseableHttpResponse httpResponse = httpClient.execute(httpPost)) {
             final HttpEntity entity = httpResponse.getEntity();
-            String result = EntityUtils.toString(entity, StandardCharsets.UTF_8);
-            
-            // 결과 로깅
-            System.out.println("API 응답: " + result);
-            
-            return result;
+            return EntityUtils.toString(entity, StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
